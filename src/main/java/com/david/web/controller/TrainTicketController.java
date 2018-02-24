@@ -43,6 +43,7 @@ public class TrainTicketController {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handle(RuntimeException e) {
+        logger.error("error", e);
         return new ErrorResponse(e.getMessage()); // use message from the original exception
     }
 

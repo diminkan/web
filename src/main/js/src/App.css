@@ -48,6 +48,10 @@ button+button {
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
 }
 
+.mySidenav input {
+  margin-top: 5px
+}
+
 #main {
   transition: margin-left .5s;
 }

@@ -35,6 +35,8 @@ class Ticket extends Component {
         super(props);
 
         this.toggle = this.toggle.bind(this);
+        this.from='SZQ';
+        this.to='GGQ';
 
         this.state = {
             expanded: false,
@@ -44,7 +46,9 @@ class Ticket extends Component {
             albumTabs: [],
             selectedRows: {},
             searchDate: this.formatDate(this.jumpToNextFriday(new Date())),
-            loading: true
+            loading: true,
+            from:'SZQ',
+            to:'GGQ'
         };
 
         this.selectRowProp = {
@@ -75,6 +79,28 @@ class Ticket extends Component {
         this.refreshTable(event.target.value);
     }
 
+    onFromChange(event) {
+        this.setState({loading: true});
+        this.from = event.target.value;
+        this.refreshTable(event.target.value);
+    }
+
+    onToChange(event) {
+        this.setState({loading: true});
+        this.to = event.target.value;
+        this.refreshTable(event.target.value);
+    }
+
+    onSwap() {
+        console.log("onSwap");
+        this.setState({ to:this.state.from,
+            from:this.state.to
+        }, ()=>{
+            this.refreshTable(this.state.searchDate)
+        })
+        
+    }
+
     onSubmit() {
         this.refreshTable(this.state.searchDate);
     }
@@ -101,7 +127,7 @@ class Ticket extends Component {
 
     refreshTable(searchDate) {
         console.log("refresh " + searchDate);
-        fetch('/ticket/query?trainDate='+searchDate+'&fromStation=SZQ&toStation=GGQ', {
+        fetch('/ticket/query?trainDate='+searchDate+'&fromStation='+this.state.from+'&toStation='+this.state.to, {
                 method: 'get',
                 headers: {
                     'Authorization' : store.someData ,
@@ -113,8 +139,13 @@ class Ticket extends Component {
                 return response.json();
             })
             .then(function (data) {
-                data = data.filter(row => row['from']==='NZQ'&&row['to']==='IZQ');
-                this.setState({tableData: data});
+                if(data.length>0) {
+                    data = data.filter(row => (row['from']==='NZQ'&&row['to']==='IZQ')||
+                    (row['to']==='NZQ'&&row['from']==='IZQ'));
+                    this.setState({tableData: data});
+                } else {
+                    this.setState({tableData:[]});
+                }
                 this.setState({loading: false});
             }.bind(this))
     }
@@ -140,15 +171,17 @@ class Ticket extends Component {
         let btnDisabled = false;
         if(!(row.firstClass === '有' || row.firstClass>0)) {
             btnDisabled = true;
-            btnClass = btnClass+ ' disabled';
         }
         return <span>
+            {!btnDisabled?
             <button
                 className={btnClass}
                 type="submit"
                 onClick={(this.onBuy.bind(this, row.id, btnDisabled))}>
                 Buy
             </button>
+            :<span></span>
+            }
 
         </span>;
     }
@@ -210,9 +243,21 @@ class Ticket extends Component {
                             <Col sm="12">
 
                             <div id="mySidenav" className="sidenav" style={style}>
-                                <input type="date" name="date" id="date" value={this.state.searchDate} onChange={this.onSearchDateChange.bind(this)} placeholder="with a placeholder" />
+                                <div class="form-group">
+                                    <label for="from">Date</label>                                
+                                    <input type="date" className="form-control" name="date" id="date" value={this.state.searchDate} onChange={this.onSearchDateChange.bind(this)} placeholder="with a placeholder" />
+                                </div>
+                                <div className="form-group">
+                                    <label for="from">From</label>
+                                    <input type="text" className="form-control" id="from" value={this.state.from} readOnly/>
+                                    <span onClick={this.onSwap.bind(this)}><i style={{marginLeft:"100px", marginTop:"10px"}} className="fa fa-arrows-alt-v" ></i></span>
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label for="to">To</label>
+                                    <input type="text" className="form-control" id="to" value={this.state.to} readOnly/>
+                                </div>                            
                             </div>
-
                     
                             <div id="main" style={mainStyle}>
 
